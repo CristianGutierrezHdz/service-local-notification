@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:service_local_notification/main/app_routing.dart';
-import 'package:service_local_notification/main/provider_setup.dart';
+import 'package:service_local_notification/presentation/main/app_routing.dart';
+import 'package:service_local_notification/presentation/main/provider_setup.dart';
 import 'package:service_local_notification/services/navigation_service.dart';
 
 class MyApp extends StatelessWidget {

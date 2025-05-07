@@ -9,7 +9,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:service_local_notification/interfaces/services/i_navigation_service.dart';
-import 'package:service_local_notification/main/app_routing.dart';
+import 'package:service_local_notification/presentation/main/app_routing.dart';
 
 class NavigationService extends INavigationService {
   // 1. Declaramos una instancia estática privada de la clase.

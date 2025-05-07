@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:service_local_notification/screens/home_screen.dart';
-import 'package:service_local_notification/screens/not_found_screen.dart';
+import 'package:service_local_notification/presentation/screens/home_screen.dart';
+import 'package:service_local_notification/presentation/screens/not_found_screen.dart';
 
 /// Clase estática que define las rutas utilizadas en la aplicación.
 /// Evita el uso de strings "mágicos" directamente en el código.

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:service_local_notification/presentation/viewmodels/home_vm.dart';
 
 class ProviderSetup {
   static Widget init({required Widget child}) {
     return MultiProvider(
       providers: [
         // Inyección de dependencias
-        // ChangeNotifierProvider( create: (context) => AuthPhoneInputVM(
-
-        // )),
+        ChangeNotifierProvider(create: (context) => HomeVM()),
       ],
       child: child,
     );
