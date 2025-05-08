@@ -1,27 +1,46 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:service_local_notification/application/services/navigation_service.dart';
+import 'package:service_local_notification/presentation/main/app_routing.dart';
 
-class LocalNotificationService {
+class NotificationService {
   //////////////////////////////////////////////////////////////////////////////
   /// # Singleton Pattern
   /// Garantiza que solo exista una instancia de esta clase.
   //////////////////////////////////////////////////////////////////////////////
 
-  static final LocalNotificationService _instance =
-      LocalNotificationService._internal();
+  // Se declara una instancia estática y final de la clase.
+  // Esto asegura que solo exista una única instancia de LocalNotificationService.
+  static final NotificationService _instance = NotificationService._internal();
 
-  factory LocalNotificationService() => _instance;
+  // Constructor factory: siempre devuelve la misma instancia.
+  // Esto significa que cada vez que se llame a LocalNotificationService(),
+  // se retornará la misma instancia almacenada en _instance.
+  factory NotificationService() {
+    _instance._ensureInitialized(); // Asegura inicialización
+    return _instance;
+  }
 
-  LocalNotificationService._internal();
+
+  // Constructor privado: evita que se pueda crear una nueva instancia
+  // desde fuera de la clase. Solo puede ser invocado dentro de esta clase.
+  NotificationService._internal();
+
+   Future<void> _ensureInitialized() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   /// # Propiedades generales
   //////////////////////////////////////////////////////////////////////////////
+
+
+  bool _isInitialized = false; // Bandera de inicialización
 
   int id = 0;
   String? selectedNotificationPayload;
@@ -55,6 +74,7 @@ class LocalNotificationService {
 
   /// Inicializa el plugin y configura los canales/categorías por plataforma.
   Future<void> initialize() async {
+    if (_isInitialized) return; // Evita doble inicialización
     await _requestNotificationPermission();
 
     // Configuración Android
@@ -110,27 +130,22 @@ class LocalNotificationService {
       iOS: initializationSettingsDarwin,
     );
 
+    // Inicializa el plugin de notificaciones locales
+    // Este método se ejecuta una sola vez, usualmente al iniciar la aplicación
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
+      
+      // Este callback se ejecuta cuando el usuario hace clic en una notificación
       onDidReceiveNotificationResponse: (response) {
-        if (kDebugMode) {
-          print('Notification tapped with payload: ${response.payload}');
-        }
+        final payload = response.payload;
+
+        // Navega a una ruta específica pasando el 'payload' como argumento
+        // El payload generalmente contiene información útil como un ID o un mensaje
+        NavigationService().navigateTo(AppRoutes.secondPage, arguments: payload);
       },
     );
-
-    if (kDebugMode) {
-      print('Notification plugin initialized');
-    }
-
-    // Si la app fue lanzada desde una notificación en Linux
-    if (!kIsWeb && Platform.isLinux) {
-      final details = await _flutterLocalNotificationsPlugin
-          .getNotificationAppLaunchDetails();
-      if (details?.didNotificationLaunchApp ?? false) {
-        selectedNotificationPayload = details?.notificationResponse?.payload;
-      }
-    }
+    
+    _isInitialized = true; // Marca como inicializado    
   }
 
   /// Solicita permiso para enviar notificaciones
@@ -147,8 +162,27 @@ class LocalNotificationService {
   //////////////////////////////////////////////////////////////////////////////
   /// # Métodos para mostrar diferentes tipos de notificaciones
   //////////////////////////////////////////////////////////////////////////////
+  
+  /// AndroidNotificationAction
+  ///   id (String)
+  ///     Distinguir qué acción se seleccionó cuando el usuario interactúa con la notificación.
+  ///   title (String)
+  ///   icon (AndroidBitmap<Object>?)
+  ///   contextual (bool)
+  ///     Indica si la acción es contextual, es decir, si depende del contenido de la notificación
+  ///   titleColor (Color?)
+  ///   showsUserInterface (bool)
+  ///   cancelNotification (bool)
+  ///   inputs (List<AndroidNotificationActionInput>)
+  ///     Lista de entradas que permiten al usuario proporcionar información directamente desde la notificación.
+  ///   allowGeneratedReplies (bool)
 
-  Future<void> showNotification() async {
+
+  Future<void> showNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'your channel id',
       'your channel name',
@@ -162,14 +196,18 @@ class LocalNotificationService {
 
     await _flutterLocalNotificationsPlugin.show(
       id++,
-      'plain title',
-      'plain body',
+      title,
+      body,
       notificationDetails,
-      payload: 'item x',
+      payload: payload ?? 'default_payload',
     );
   }
 
-  Future<void> showNotificationCustomSound() async {
+
+  Future<void> showNotificationCustomSound({
+    required String title,
+    required String body,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'your other channel id',
       'your other channel name',
@@ -188,13 +226,16 @@ class LocalNotificationService {
 
     await _flutterLocalNotificationsPlugin.show(
       id++,
-      'custom sound title',
-      'custom sound body',
+      title,
+      body,
       notificationDetails,
     );
   }
 
-  Future<void> showOngoingNotification() async {
+  Future<void> showOngoingNotification({
+    required String title,
+    required String body,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'your_channel_id',
       'Your Channel Name',
@@ -207,13 +248,16 @@ class LocalNotificationService {
 
     await _flutterLocalNotificationsPlugin.show(
       id++,
-      'Ongoing Title',
-      'Ongoing Body',
-      NotificationDetails(android: androidDetails),
+      title,
+      body,
+      const NotificationDetails(android: androidDetails),
     );
   }
 
-  Future<void> showNotificationWithNoSound() async {
+  Future<void> showNotificationWithNoSound({
+    required String title,
+    required String body,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'silent channel id',
       'silent channel name',
@@ -236,13 +280,17 @@ class LocalNotificationService {
 
     await _flutterLocalNotificationsPlugin.show(
       id++,
-      'Silent Title',
-      'Silent Body',
+      title,
+      body,
       notificationDetails,
     );
   }
 
-  Future<void> showNotificationWithActions() async {
+  Future<void> showNotificationWithActions({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
     // Agrega aquí tus acciones por plataforma como ya las tienes configuradas.
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
@@ -280,61 +328,27 @@ class LocalNotificationService {
     const DarwinNotificationDetails iosNotificationDetails =
         DarwinNotificationDetails(
       categoryIdentifier: darwinNotificationCategoryPlain,
-    );
+    );    
 
-    const DarwinNotificationDetails macOSNotificationDetails =
-        DarwinNotificationDetails(
-      categoryIdentifier: darwinNotificationCategoryPlain,
-    );
-
-    const LinuxNotificationDetails linuxNotificationDetails =
-        LinuxNotificationDetails(
-      actions: <LinuxNotificationAction>[
-        LinuxNotificationAction(
-          key: urlLaunchActionId,
-          label: 'Action 1',
-        ),
-        LinuxNotificationAction(
-          key: navigationActionId,
-          label: 'Action 2',
-        ),
-      ],
-    );
-
-    final WindowsNotificationDetails windowsNotificationsDetails =
-        WindowsNotificationDetails(
-      subtitle: 'Click the three dots for another button',
-      actions: <WindowsAction>[
-        const WindowsAction(
-          content: 'Text',
-          arguments: 'text',
-        ),
-        WindowsAction(
-          content: 'Image',
-          arguments: 'image',
-          imageUri: WindowsImage.getAssetUri('icons/coworker.png'),
-        ),
-        const WindowsAction(
-          content: 'Context',
-          arguments: 'context',
-          placement: WindowsActionPlacement.contextMenu,
-        ),
-      ],
-    );
-
-    final NotificationDetails notificationDetails = NotificationDetails(
+    const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: iosNotificationDetails,
-      macOS: macOSNotificationDetails,
-      linux: linuxNotificationDetails,
-      windows: windowsNotificationsDetails,
     );
-    await _flutterLocalNotificationsPlugin.show(
-        id++, 'plain title', 'plain body', notificationDetails,
-        payload: 'item z');
+
+    await _flutterLocalNotificationsPlugin.show(      
+      id++,       
+      title,
+      body,
+      notificationDetails,
+      payload: payload ?? 'item z',
+    );
   }
 
-  Future<void> showNotificationWithTextChoice() async {
+  Future<void> showNotificationWithTextChoice({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
     // Igual que el anterior, con inputs tipo elección de texto.
 
     const AndroidNotificationDetails androidNotificationDetails =
@@ -364,64 +378,52 @@ class LocalNotificationService {
     const DarwinNotificationDetails darwinNotificationDetails =
         DarwinNotificationDetails(
       categoryIdentifier: darwinNotificationCategoryText,
-    );
-
-    const WindowsNotificationDetails windowsNotificationDetails =
-        WindowsNotificationDetails(
-      actions: <WindowsAction>[
-        WindowsAction(
-            content: 'Submit', arguments: 'submit', inputId: 'choice'),
-      ],
-      inputs: <WindowsInput>[
-        WindowsSelectionInput(
-          id: 'choice',
-          defaultItem: 'abc',
-          items: <WindowsSelection>[
-            WindowsSelection(id: 'abc', content: 'abc'),
-            WindowsSelection(id: 'def', content: 'def'),
-          ],
-        ),
-      ],
-    );
+    );    
 
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: darwinNotificationDetails,
-      macOS: darwinNotificationDetails,
-      windows: windowsNotificationDetails,
     );
+
     await _flutterLocalNotificationsPlugin.show(
-        id++, 'plain title', 'plain body', notificationDetails,
-        payload: 'item x');
+      id++,       
+      title,
+      body,
+      notificationDetails,
+      payload: payload ?? 'default_payload',
+    );
   }
 
-  Future<void> showBigTextNotification() async {
-    const bigTextStyle = BigTextStyleInformation(
-      'Lorem <i>ipsum...</i>',
+  Future<void> showBigTextNotification({
+    required String title,
+    required String body,
+    required String text,
+  }) async {
+    BigTextStyleInformation bigTextStyleInformation =
+        BigTextStyleInformation(
+      text,
       htmlFormatBigText: true,
-      contentTitle: 'Big Title',
+      contentTitle: 'overridden <b>big</b> content title',
       htmlFormatContentTitle: true,
-      summaryText: 'Summary text',
+      summaryText: 'summary <i>text</i>',
       htmlFormatSummaryText: true,
     );
-
-    const androidDetails = AndroidNotificationDetails(
-      'big text channel id',
-      'big text channel name',
-      channelDescription: 'big text channel description',
-      styleInformation: bigTextStyle,
-    );
-
-    final notificationDetails = NotificationDetails(android: androidDetails);
-
+    AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+            'big text channel id', 'big text channel name',
+            channelDescription: 'big text channel description',
+            styleInformation: bigTextStyleInformation);
+    NotificationDetails notificationDetails =
+        NotificationDetails(android: androidNotificationDetails);
+        
     await _flutterLocalNotificationsPlugin.show(
       id++,
-      'Big Text Title',
-      'Big Text Body',
+      title,
+      body,
       notificationDetails,
     );
   }
-
+  
   //////////////////////////////////////////////////////////////////////////////
   /// # Cancelación de notificaciones
   //////////////////////////////////////////////////////////////////////////////

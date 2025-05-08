@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:service_local_notification/presentation/main/app_routing.dart';
 import 'package:service_local_notification/presentation/main/provider_setup.dart';
-import 'package:service_local_notification/services/navigation_service.dart';
+import 'package:service_local_notification/application/services/navigation_service.dart';
 
 class MyApp extends StatelessWidget {
   MyApp({super.key});
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         navigatorKey: navigationService.navigatorKey,
         onGenerateRoute: AppRouter().generateRoute,
-        initialRoute: AppRoutes.onboardingStep1,
+        initialRoute: AppRoutes.home,
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

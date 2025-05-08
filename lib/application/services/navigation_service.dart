@@ -8,7 +8,7 @@
 //instancias de una clase, lo que puede llevar a inconsistencias y problemas de rendimiento.
 
 import 'package:flutter/material.dart';
-import 'package:service_local_notification/interfaces/services/i_navigation_service.dart';
+import 'package:service_local_notification/domain/interfaces/services/i_navigation_service.dart';
 import 'package:service_local_notification/presentation/main/app_routing.dart';
 
 class NavigationService extends INavigationService {

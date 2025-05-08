@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:service_local_notification/presentation/screens/home_screen.dart';
 import 'package:service_local_notification/presentation/screens/not_found_screen.dart';
+import 'package:service_local_notification/presentation/screens/second_page.dart';
 
 /// Clase estática que define las rutas utilizadas en la aplicación.
 /// Evita el uso de strings "mágicos" directamente en el código.
 class AppRoutes {
-  static const String onboardingStep1 = '/onboarding_step1';
+  static const String home = '/';
+  static const String secondPage = '/secondPage';
 }
 
 /// Clase encargada de generar las rutas en base al nombre recibido.
@@ -13,8 +15,11 @@ class AppRoutes {
 class AppRouter {
   Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case AppRoutes.onboardingStep1:
+      case AppRoutes.home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case AppRoutes.secondPage:
+        final args = settings.arguments as String?;
+        return MaterialPageRoute(builder: (_) => SecondPage(args));
       default:
         var name = settings.name as String;
         return MaterialPageRoute(builder: (_) => NotFoundScreen(args: name));

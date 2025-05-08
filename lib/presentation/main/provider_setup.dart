@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:service_local_notification/application/services/local_notifications_service.dart';
 import 'package:service_local_notification/presentation/viewmodels/home_vm.dart';
 
 class ProviderSetup {
@@ -7,7 +8,9 @@ class ProviderSetup {
     return MultiProvider(
       providers: [
         // Inyección de dependencias
-        ChangeNotifierProvider(create: (context) => HomeVM()),
+        ChangeNotifierProvider(create: (context) => HomeVM(
+          NotificationService()
+        )),
       ],
       child: child,
     );
