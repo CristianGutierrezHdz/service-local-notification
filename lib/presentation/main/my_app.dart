@@ -5,7 +5,11 @@ import 'package:service_local_notification/presentation/main/provider_setup.dart
 import 'package:service_local_notification/application/services/navigation_service.dart';
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
+  final String initialRoute;
+  final String? payload;
+
+  MyApp({required this.initialRoute, this.payload, super.key});
+
 
   final NavigationService navigationService = NavigationService();
 
@@ -16,7 +20,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         navigatorKey: navigationService.navigatorKey,
         onGenerateRoute: AppRouter().generateRoute,
-        initialRoute: AppRoutes.home,
+        initialRoute: initialRoute,
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

@@ -41,6 +41,7 @@ class NotificationService {
 
 
   bool _isInitialized = false; // Bandera de inicialización
+  bool _isRequestingPermissions = false; // Bandera para evitar solicitudes duplicadas
 
   int id = 0;
   String? selectedNotificationPayload;
@@ -133,10 +134,9 @@ class NotificationService {
     // Inicializa el plugin de notificaciones locales
     // Este método se ejecuta una sola vez, usualmente al iniciar la aplicación
     await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      
+      initializationSettings,      
       // Este callback se ejecuta cuando el usuario hace clic en una notificación
-      onDidReceiveNotificationResponse: (response) {
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
         final payload = response.payload;
 
         // Navega a una ruta específica pasando el 'payload' como argumento
@@ -150,8 +150,15 @@ class NotificationService {
 
   /// Solicita permiso para enviar notificaciones
   Future<void> _requestNotificationPermission() async {
-    if (await Permission.notification.isDenied) {
-      await Permission.notification.request();
+    if (_isRequestingPermissions) return; // Evita solicitudes duplicadas
+    _isRequestingPermissions = true;
+
+    try {
+      if (await Permission.notification.isDenied) {
+        await Permission.notification.request();
+      }
+    } finally {
+      _isRequestingPermissions = false; // Restablece la bandera
     }
   }
 
@@ -202,7 +209,6 @@ class NotificationService {
       payload: payload ?? 'default_payload',
     );
   }
-
 
   Future<void> showNotificationCustomSound({
     required String title,
